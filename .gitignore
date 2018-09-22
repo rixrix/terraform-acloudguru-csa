@@ -1,0 +1,23 @@
+node_modules/
+.vscode/
+.expo/
+npm-debug.*
+
+# OSX
+#
+.DS_Store
+
+# Android/IntelliJ
+android/
+#
+build/
+.idea
+.tmp
+.gradle
+local.properties
+*.iml
+
+# terraform
+*.terraform
+*.tfstate
+*.tfstate.*
