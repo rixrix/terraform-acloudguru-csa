@@ -2,7 +2,8 @@
 
 # Requirements
 - Install Terraform https://www.terraform.io/
-- AWS Account
+- AWS Account https://aws.amazon.com
+- ACloudGuru account/subscription http://acloud.guru/
 
 # Chapter 8
 
