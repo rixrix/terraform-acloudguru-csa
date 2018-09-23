@@ -1,12 +1,14 @@
+# ACloudGuru
+
+# Requirements
+- Install Terraform https://www.terraform.io/
+- AWS Account
+
 # Chapter 8
 
-## Notes
-- TODO: Missing auto-assign public IP address for public subnet 
-- TODO: proper tagging of resoures
-- TODO: use AWS_PROFILE
-- TODO: push to github
-- TODO: exclude `.tfstat.xx`
-- TODO: exclude `.terraform`
+## ToDo
+- Add RDS
+- TODO: Missing auto-assign public IP address for public subnet
 
 ## Resources
 - https://github.com/devops-recipes/prov_aws_vpc_terraform
