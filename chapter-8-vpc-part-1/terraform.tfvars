@@ -1,4 +1,3 @@
-aws_profile="rix@playground"
 vpc_region="ap-southeast-2"
 vpc_name="Chapter-8 VPC"
 vpc_cidr_block="10.0.0.0/16"
