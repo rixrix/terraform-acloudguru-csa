@@ -29,6 +29,7 @@ resource "aws_subnet" "vpc_public_sn" {
   vpc_id = "${aws_vpc.vpc_name.id}"
   cidr_block = "${var.vpc_public_subnet_1_cidr}"
   availability_zone = "${lookup(var.availability_zone, var.vpc_region)}"
+  map_public_ip_on_launch = true
   tags {
     Name = "vpc_public_sn"
     Type = "${var.tag_type}"
@@ -70,8 +71,8 @@ resource "aws_route_table_association" "vpc_public_sn_rt_assn" {
 
 # ECS Instance Security group
 resource "aws_security_group" "vpc_public_sg" {
-  name = "demo_pubic_sg"
-  description = "demo public access security group"
+  name = "vpc_pubic_sg"
+  description = "VPC public access security group"
   vpc_id = "${aws_vpc.vpc_name.id}"
 
   ingress {
@@ -99,15 +100,15 @@ resource "aws_security_group" "vpc_public_sg" {
       "0.0.0.0/0"]
   }
   tags {
-    Name = "demo_pubic_sg"
+    Name = "vpc_pubic_sg"
     Type = "${var.tag_type}"
     ManagedBy = "${var.tag_managed_by}"
   }
 }
 
 resource "aws_security_group" "vpc_private_sg" {
-  name = "demo_private_sg"
-  description = "demo security group to access private ports"
+  name = "vpc_private_sg"
+  description = "VPC security group to access private ports"
   vpc_id = "${aws_vpc.vpc_name.id}"
 
   # allow memcached port within VPC
@@ -154,10 +155,81 @@ resource "aws_security_group" "vpc_private_sg" {
       "0.0.0.0/0"]
   }
   tags {
-    Name = "demo_private_sg"
+    Name = "vpc_private_sg"
     Type = "${var.tag_type}"
     ManagedBy = "${var.tag_managed_by}"
   }
+}
+
+resource "aws_key_pair" "acg_vpc_ch8_kp" {
+  key_name = "acg_vpc_ch8_kp"
+  public_key = "${file("~/.ssh/id_rsa.pub")}"
+}
+
+# Launch EC2 instance
+resource "aws_instance" "vpc_public_webserver_ai" {
+  ami           = "ami-09b42976632b27e9b"
+  instance_type = "t2.micro"
+  vpc_security_group_ids = ["${aws_security_group.vpc_public_sg.id}"]
+  subnet_id = "${aws_subnet.vpc_public_sn.id}"
+  key_name = "acg_vpc_ch8_kp"
+  tags {
+    Name = "acg_vpc_ch8_ec2"
+    Type = "${var.tag_type}"
+    ManagedBy = "${var.tag_managed_by}"
+  }
+
+  connection {
+    user = "ec2-user"
+    private_key = "${file("~/.ssh/id_rsa")}"
+  }
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+      "sudo yum -y install httpd"
+    ]
+  }
+}
+
+# create an S3 bucket to store the state file in
+resource "aws_s3_bucket" "acg_ch8_vpc_part_1_s3" {
+  bucket = "acg-ch8-vpc-part-1"
+
+  versioning {
+    enabled = true
+  }
+
+  lifecycle {
+    prevent_destroy = false
+  }
+
+  tags {
+    Name = "Terraform state file"
+    Type = "${var.tag_type}"
+    ManagedBy = "${var.tag_managed_by}"
+  }
+}
+
+# create a dynamodb table for locking the state file
+resource "aws_dynamodb_table" "acg_ch8_vpc_part_1_ddb" {
+  name = "acg-ch8-vpc-part-1"
+  hash_key = "LockID"
+  read_capacity = 20
+  write_capacity = 20
+
+  attribute {
+    name = "LockID"
+    type = "S"
+  }
+
+  tags {
+    Name = "DynamoDB Terraform State Lock Table"
+    Type = "${var.tag_type}"
+    ManagedBy = "${var.tag_managed_by}"
+  }
+
+  depends_on = ["aws_s3_bucket.acg_ch8_vpc_part_1_s3"]
 }
 
 output "vpc_region" {
@@ -182,4 +254,8 @@ output "vpc_public_sg_id" {
 
 output "vpc_private_sg_id" {
   value = "${aws_security_group.vpc_private_sg.id}"
+}
+
+output "vpc_public_webserver_id" {
+  value = "${aws_instance.vpc_public_webserver_ai.id}"
 }
