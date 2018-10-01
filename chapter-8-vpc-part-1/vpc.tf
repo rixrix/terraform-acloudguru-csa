@@ -192,46 +192,6 @@ resource "aws_instance" "vpc_public_webserver_ai" {
   }
 }
 
-# create an S3 bucket to store the state file in
-resource "aws_s3_bucket" "acg_ch8_vpc_part_1_s3" {
-  bucket = "acg-ch8-vpc-part-1"
-
-  versioning {
-    enabled = true
-  }
-
-  lifecycle {
-    prevent_destroy = false
-  }
-
-  tags {
-    Name = "Terraform state file"
-    Type = "${var.tag_type}"
-    ManagedBy = "${var.tag_managed_by}"
-  }
-}
-
-# create a dynamodb table for locking the state file
-resource "aws_dynamodb_table" "acg_ch8_vpc_part_1_ddb" {
-  name = "acg-ch8-vpc-part-1"
-  hash_key = "LockID"
-  read_capacity = 20
-  write_capacity = 20
-
-  attribute {
-    name = "LockID"
-    type = "S"
-  }
-
-  tags {
-    Name = "DynamoDB Terraform State Lock Table"
-    Type = "${var.tag_type}"
-    ManagedBy = "${var.tag_managed_by}"
-  }
-
-  depends_on = ["aws_s3_bucket.acg_ch8_vpc_part_1_s3"]
-}
-
 output "vpc_region" {
   value = "${var.vpc_region}"
 }
